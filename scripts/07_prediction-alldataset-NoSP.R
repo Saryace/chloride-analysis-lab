@@ -101,7 +101,7 @@ labels_ggplot <- eval_results %>%
     label = paste0("R² = ", round(rsq, 2), "\nRMSE = ", comma(rmse, accuracy = 0.001))
   )
 
-obs_pred_plot <- ggplot(plot_data, aes(x = .pred, y = truth)) +
+obs_pred <- ggplot(plot_data, aes(x = .pred, y = truth)) +
   geom_point(alpha = 0.6, color = "#0072B2") +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
   facet_wrap(~ model, ncol = 12) +
@@ -110,7 +110,7 @@ obs_pred_plot <- ggplot(plot_data, aes(x = .pred, y = truth)) +
     aes(x = -Inf, y = Inf, label = label),
     inherit.aes = FALSE,
     hjust = -0.05, vjust = 1.1,
-    size = 3
+    size = 2
   ) +
   labs(
     x = "Predicted",
@@ -119,11 +119,11 @@ obs_pred_plot <- ggplot(plot_data, aes(x = .pred, y = truth)) +
     subtitle = "Linear models using methods + optional covariates all datasets"
   ) +
   coord_obs_pred() +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 6) +
   theme(
-    strip.text = element_text(size = 8, face = "bold"),
+    strip.text = element_text(size = 5, face = "bold"),
     plot.title = element_text(face = "bold"),
-    plot.subtitle = element_text(size = 10),
+    plot.subtitle = element_text(size = 6),
     panel.grid.minor = element_blank()
   )
 
