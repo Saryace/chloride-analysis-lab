@@ -1,7 +1,7 @@
 ## Update 25/Jun/2025
 
 | Script                    | Objetive                                                                                                                                           |
-|------------------------------------|------------------------------------|
+|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
 | 01_descriptive.R          | Correlation Tables and Summary Stats                                                                                                               |
 | 02_intercept_log.R        | Fits and evaluates all pairwise linear models between log-transformed chloride methods using train/test split 80/20                                |
 | 03_intercept.R            | Fits and evaluates all pairwise linear models between chloride methods using train/test split 80/20                                                |
@@ -10,4 +10,18 @@
 
 ## Figures
 
-![](https://github.com/Saryace/chloride-analysis-lab/blob/main/figures/fig_corr.tiff?raw=true)
+### Correlation all method (colors are differents dataset)
+
+![](/figures/fig_corr.png)
+
+### Correlation all method log-transformed (colors are differents dataset)
+
+![](/figures/fig_corr_log.png)
+
+### Observed vs. predicted methods = SP + pH +EC
+
+![](/figures/obs_pred.png)
+
+### Observed vs. predicted log-transformed methods = logSP + pH +EC
+
+![](/figures/obs_pred_log.png)

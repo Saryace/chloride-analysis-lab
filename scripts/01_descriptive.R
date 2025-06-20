@@ -31,6 +31,7 @@ fig_corr <- ggpairs(
   theme_bw()
 
 ggsave("figures/fig_corr.tiff", fig_corr, width = 8, height = 8)
+ggsave("figures/fig_corr.png", fig_corr, width = 8, height = 8)
 
 fig_corr_log <- ggpairs(
   cl_data %>% select(all_of(cl_methods_log), Set), 
@@ -40,6 +41,7 @@ fig_corr_log <- ggpairs(
   theme_bw()
 
 ggsave("figures/fig_corr_log.tiff", fig_corr_log, width = 8, height = 8)
+ggsave("figures/fig_corr_log.png", fig_corr_log, width = 8, height = 8)
 
 
 # Summary Stat Log --------------------------------------------------------
