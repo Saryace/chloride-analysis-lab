@@ -115,3 +115,4 @@ obs_pred <- ggplot(plot_data, aes(x = .pred, y = truth)) +
 
 
 ggsave("figures/obs_pred_log.tiff", obs_pred, width = 8, height = 8)
+ggsave("figures/obs_pred_log.png", obs_pred, width = 8, height = 8)
