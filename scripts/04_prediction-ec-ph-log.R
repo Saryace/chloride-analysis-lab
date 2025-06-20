@@ -10,9 +10,6 @@ library(readxl) # for loading data
 cl_data <- read_csv("data/Chap2.csv") %>% 
   filter(Set == 1)
 
-cl_methods_log <- c("logSP","logMT","logPT","logICP","logIC")
-base_covariates <- c("pH", "EC", "EC + pH")
-
 # Split train/test --------------------------------------------------------
 
 set.seed(123)
@@ -61,6 +58,34 @@ eval_results <- map2_dfr(
     metrics(preds, truth = truth, estimate = .pred) %>%
       mutate(model = fml, response = response)
   }
+)
+
+# Coefficients ------------------------------------------------------------
+
+coef_table <- map2_dfr(
+  lm_models,
+  names(lm_models),
+  ~ tidy(.x) %>% mutate(model = .y)
+) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3)))
+
+# Create flextable
+coef_flex <- flextable(coef_table) %>%
+  set_header_labels(
+    model = "Model",
+    term = "Term",
+    estimate = "Estimate",
+    std.error = "Std. Error",
+    statistic = "t-Statistic",
+    p.value = "p-Value"
+  ) %>%
+  autofit() %>%
+  theme_booktabs() %>%
+  fontsize(size = 10, part = "all")
+
+save_as_docx(
+  coef_flex,
+  path = "docx/coef-table-log.docx"
 )
 
 # Plot data ---------------------------------------------------------------
@@ -116,3 +141,8 @@ obs_pred <- ggplot(plot_data, aes(x = .pred, y = truth)) +
 
 ggsave("figures/obs_pred_log.tiff", obs_pred, width = 8, height = 8)
 ggsave("figures/obs_pred_log.png", obs_pred, width = 8, height = 8)
+
+
+# Prediction rest sets ----------------------------------------------------
+
+

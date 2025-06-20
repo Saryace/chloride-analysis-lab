@@ -67,7 +67,8 @@ coef_table <- map2_dfr(
   lm_models,
   names(lm_models),
   ~ tidy(.x) %>% mutate(model = .y)
-)
+) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3)))
 
 # Create flextable
 coef_flex <- flextable(coef_table) %>%
@@ -81,7 +82,6 @@ coef_flex <- flextable(coef_table) %>%
   ) %>%
   autofit() %>%
   theme_booktabs() %>%
-  colformat_num(j = "p.value", digits = 3) %>%
   fontsize(size = 10, part = "all")
 
 save_as_docx(
