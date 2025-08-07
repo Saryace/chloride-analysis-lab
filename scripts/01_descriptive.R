@@ -17,27 +17,54 @@ cl_data <- read_csv("data/Chap2.csv") # load data
 
 # Extract colnames --------------------------------------------------------
 
-cl_methods <- c("SP","MT","PT","ICP","IC")
+cl_methods <- c("MT","PT","ICP","IC")
 
-cl_methods_log <- c("logSP","logMT","logPT","logICP","logIC")
+cl_methods_log <- c("logMT","logPT","logICP","logIC")
+
+
+# Okabeito ----------------------------------------------------------------
+
+okabe_ito <- c(
+  "#E69F00", # orange
+  "#56B4E9", # sky blue
+  "#009E73", # bluish green
+  "#D55E00", # vermillion
+  "#0072B2" # blue
+)
 
 # GGally ------------------------------------------------------------------
 
+custom_diag <- function(data, mapping, ...) {
+  ggplot(data = data, mapping = mapping) +
+    geom_density(alpha = 0.5) + 
+    scale_fill_manual(values = okabe_ito) +
+    scale_color_manual(values = okabe_ito)
+}
+
+
 fig_corr <- ggpairs(
-  cl_data %>% select(all_of(cl_methods), Set), 
+  cl_data %>%
+    select(all_of(cl_methods), Set) %>% 
+    mutate(Set = paste("Set", Set)), 
   lower = list(continuous = 'smooth'),
-  columns = 1:5,
+  columns = 1:4,
+  diag = list(continuous = wrap(custom_diag)),
   mapping = aes(color = as.factor(Set))) +
+  scale_color_manual(values = okabe_ito) +
   theme_bw()
 
 ggsave("figures/fig_corr.tiff", fig_corr, width = 8, height = 8)
 ggsave("figures/fig_corr.png", fig_corr, width = 8, height = 8)
 
 fig_corr_log <- ggpairs(
-  cl_data %>% select(all_of(cl_methods_log), Set), 
+  cl_data %>%
+    select(all_of(cl_methods_log), Set) %>% 
+    mutate(Set = paste("Set", Set)), 
   lower = list(continuous = 'smooth'),
-  columns = 1:5,
+  columns = 1:4,
+  diag = list(continuous = wrap(custom_diag)),
   mapping = aes(color = as.factor(Set))) +
+  scale_color_manual(values = okabe_ito) +
   theme_bw()
 
 ggsave("figures/fig_corr_log.tiff", fig_corr_log, width = 8, height = 8)
@@ -46,8 +73,8 @@ ggsave("figures/fig_corr_log.png", fig_corr_log, width = 8, height = 8)
 
 # Summary Stat Log --------------------------------------------------------
 
-var_order <- c("pH","EC","SP","MT","PT","ICP","IC")
-var_order_log <- c("pH","EC","logSP","logMT","logPT","logICP","logIC")
+var_order <- c("pH","EC","MT","PT","ICP","IC")
+var_order_log <- c("pH","EC","logMT","logPT","logICP","logIC")
 description_order <- c("certified soil samples",
                        "Agvise, Northwood, ND",
                        "Areas impacted by produce water spills",
@@ -99,10 +126,11 @@ levene_test <-
 
 levene_test_log <-
   leveneTest(data = levene_data_log,
-             y = levene_data$value,
-             group = levene_data$variable)$`Pr(>F)`[1]
+             y = levene_data_log$value,
+             group = levene_data_log$variable)$`Pr(>F)`[1]
 
-# Both levene are < 0.005 -> check using kruskal if they are equivalent
+# Both levene are < 0.005 -> methods have significantly different variances.
+# check using kruskal if they are equivalent
 
 # Kruskal -----------------------------------------------------------------
 
@@ -118,8 +146,11 @@ cl_long_log <- cl_data %>%
   select(all_of(cl_methods_log)) %>%
   pivot_longer(everything(), names_to = "method", values_to = "value") 
 
-kruskal.test(value ~ method, data = cl_long)
-kruskal.test(value ~ method, data = cl_long_log)
+
+# p values for Kruskal comparison -----------------------------------------
+
+kruskal.test(value ~ method, data = cl_long)$p.value
+kruskal.test(value ~ method, data = cl_long_log)$p.value
 
 # Kruskal < 0.05 => all method are different!
 
@@ -134,18 +165,28 @@ dunn_result_log <-
 
 post_hoc <- print(dunn_result$res) %>%
   mutate(
-    significance = ifelse(P.adj > 0.05, "Methods equivalent", "Signif. different"),
+    Significance = ifelse(P.adj > 0.05, "Methods equivalent", "Signif. different"),
     Z = round(Z, 2),
     P.adj = round(P.adj, 4),
-    P.unadj = round(P.unadj, 4)
+    Sig.Level = case_when(
+      P.adj <= 0.001 ~ "***",
+      P.adj <= 0.01  ~ "**",
+      P.adj <= 0.05  ~ "*",
+      TRUE             ~ "NS"
+    )
   )
 
 post_hoc_log <- print(dunn_result_log$res) %>%
   mutate(
-    significance = ifelse(P.adj > 0.05, "Methods equivalent", "Signif. different"),
+    Significance = ifelse(P.adj > 0.05, "Methods equivalent", "Signif. different"),
     Z = round(Z, 2),
     P.adj = round(P.adj, 4),
-    P.unadj = round(P.unadj, 4)
+    Sig.Level = case_when(
+      P.adj <= 0.001 ~ "***",
+      P.adj <= 0.01  ~ "**",
+      P.adj <= 0.05  ~ "*",
+      TRUE             ~ "NS"
+    )
   )
 
 post_hoc_all <- bind_rows(post_hoc, post_hoc_log)

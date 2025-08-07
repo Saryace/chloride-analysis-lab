@@ -10,7 +10,7 @@ library(readxl) # for loading data
 cl_data <- read_csv("data/Chap2.csv") %>% 
            filter(Set == 1)
 
-cl_methods_log <- c("logSP","logMT","logPT","logICP","logIC")
+cl_methods_log <- c("logMT","logPT","logICP","logIC")
 
 # Split train/test --------------------------------------------------------
 
@@ -29,6 +29,7 @@ combinations <- expand_grid(
 # Include all metrics from poster -----------------------------------------
 
 fit_lm <- function(response, predictor, train_data, test_data, intercept = TRUE) {
+  
   formula <- if (intercept) {
     as.formula(paste(response, "~", predictor))
   } else {
@@ -37,15 +38,23 @@ fit_lm <- function(response, predictor, train_data, test_data, intercept = TRUE)
   
   mod <- lm(formula, data = train_data)
   preds <- predict(mod, newdata = test_data)
-  
   truth <- test_data[[response]]
+  
+  # Manual R2 depending on intercept
+  ss_res <- sum((truth - preds)^2)
+  ss_tot <- if (intercept) {
+    sum((truth - mean(truth))^2)
+  } else {
+    sum(truth^2)
+  }
+  r2_manual <- 1 - ss_res / ss_tot
   
   tibble(
     response = response,
     predictor = predictor,
     intercept = intercept,
-    r_squared = yardstick::rsq_vec(truth, preds),
-    sigma = sd(truth - preds),  
+    r_squared = r2_manual,
+    sigma = sd(truth - preds),
     p_value = tidy(mod)$p.value[1],
     estimate = tidy(mod)$estimate[1],
     std_error = tidy(mod)$std.error[1],
