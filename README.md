@@ -1,7 +1,7 @@
 ## Update 06/08/2025
 
 | Script                         | Objetive                                                                                                                                                                                                                                                                                                                                                                              |
-|----------------------|--------------------------------------------------|
+|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 01_descriptive.R               | Correlation Tables + Summary Stats + Levene Test + Kruskal-Wallis + PostHoc. Significance stars were assigned based on p-values: ´`***´` for p ≤ 0.001, ´`**´` for p ≤ 0.01, ´`*´` for p ≤ 0.05, and `NS` for non-significant results (p \> 0.05). Outputs: fig_corr.tiff, fig_corr_log.tiff, stats: stat-per-set-log.docx, stat-per-set.docx, posthoc:post-hoc-table.docx            |
 | 02_intercept_log.R             | Fits and evaluates all pairwise linear models between log-transformed chloride methods using train/test split 80/20 (set 1). Intercept "Yes" means y=β0​+β1​x, while intercept "No" means forced to zero y=β1​x. Output: models-table-log.docx                                                                                                                                           |
 | 03_intercept.R                 | Fits and evaluates all pairwise linear models between log-transformed chloride methods using train/test split 80/20 (set 1). Intercept "Yes" means y=β0​+β1​x, while intercept "No" means forced to zero y=β1​x. Output: models-table.docx                                                                                                                                               |
@@ -32,6 +32,6 @@
 
 ![](/figures/obs_pred.png)
 
-### Observed vs. predicted log-transformed methods 
+### Observed vs. predicted log-transformed methods
 
 ![](/figures/obs_pred_log.png)
