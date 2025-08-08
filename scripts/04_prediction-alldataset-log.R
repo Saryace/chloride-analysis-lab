@@ -93,7 +93,7 @@ plot_data <- map2_dfr(lm_models, names(lm_models), function(model, fml) {
     response_var = str_extract(model, "^[^~]+") %>% str_trim(),
     predictor_var = str_extract(model, "(?<=~ ).*$") %>% str_trim(),
     input_var = str_extract(predictor_var, "^[^+]+") %>% str_trim(),
-    output_method = paste0(response_var, " vs. ", input_var)
+    output_method = paste0(response_var, " ~ ", input_var)
   ) %>% 
   mutate(
     model_type = case_when(
@@ -115,7 +115,7 @@ labels_ggplot <- eval_results %>%
     response_var = str_extract(model, "^[^~]+") %>% str_trim(),
     predictor_var = str_extract(model, "(?<=~ ).*$") %>% str_trim(),
     input_var = str_extract(predictor_var, "^[^+]+") %>% str_trim(),
-    output_method = paste0(response_var, " vs. ", input_var)
+    output_method = paste0(response_var, " ~ ", input_var)
   ) %>% 
   mutate(
     model_type = case_when(
@@ -127,10 +127,10 @@ labels_ggplot <- eval_results %>%
   ) %>% 
   group_by(output_method) %>%
   arrange(model_type) %>%
-  mutate(y_label = seq(from = 2, to = 0.5, length.out = n()))  
+  mutate(y_label = seq(from = 4, to = 1.5, length.out = n()))  
 
 obs_pred <- ggplot(plot_data, aes(x = .pred, y = truth)) +
-  geom_point(aes(color = model_type), alpha = 0.5) +
+  geom_point(aes(color = model_type, shape = model_type), alpha = 0.5) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
   facet_wrap(vars(output_method), ncol = 3) +
   scale_color_manual(values = okabe_ito) +

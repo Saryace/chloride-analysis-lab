@@ -7,8 +7,7 @@ library(readxl) # for loading data
 
 # Load data from Excel ----------------------------------------------------
 
-cl_data <- read_csv("data/Chap2.csv") %>% 
-           filter(Set == 1)
+cl_data <- read_csv("data/Chap2.csv") 
 
 cl_methods <- c("MT","PT","ICP","IC")
 
