@@ -111,25 +111,33 @@ datasummary(
   data = data_summary_log, 
   output = "docx/stat-per-set-log.docx")
 
+
+# Shapiro-Wilk ------------------------------------------------------------
+
+shapiro_results <- cl_data %>%
+  pivot_longer(
+    cols = -c(ID, Set, Description, pH, EC),   # everything except ID/Set/Description
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  group_by(variable) %>%
+  summarise(
+    shapiro_p = shapiro.test(value)$p.value,
+    .groups = "drop"
+  ) %>% 
+  filter(shapiro_p > 0.05) 
+
+shapiro_results # all methods are not normal (p < 0.05) !
+
 # Levene Test -------------------------------------------------------------
 
-levene_data <- data_summary %>%
-  filter(Description == "certified soil samples")
+cl_long <- cl_data %>%
+  pivot_longer(cols = c(MT, PT, pH), names_to = "variable", values_to = "value")
 
-levene_data_log <- data_summary_log %>%
-  filter(Description == "certified soil samples")
+levene_across_vars <- leveneTest(value ~ variable, data = cl_long)
+levene_across_vars
 
-levene_test <-
-  leveneTest(data = levene_data,
-             y = levene_data$value,
-             group = levene_data$variable)$`Pr(>F)`[1]
-
-levene_test_log <-
-  leveneTest(data = levene_data_log,
-             y = levene_data_log$value,
-             group = levene_data_log$variable)$`Pr(>F)`[1]
-
-# Both levene are < 0.005 -> methods have significantly different variances.
+# Levene < 0.005 -> at least one variable has significantly different variance.
 # check using kruskal if they are equivalent
 
 # Kruskal -----------------------------------------------------------------
