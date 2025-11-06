@@ -57,11 +57,11 @@ data_summary_log <- cl_data %>%
 datasummary(
   All(data_summary) * variable ~ Description * (Mean + SD + N),
   data = data_summary,
-  output = "docx/stat-per-set.docx"
+  output = "docx/descriptive/stat-per-set.docx"
 )
 
 datasummary(
   All(data_summary_log) * variable ~ Description * (Mean + SD + N),
   data = data_summary_log,
-  output = "docx/stat-per-set-log.docx"
+  output = "docx/descriptive/stat-per-set-log.docx"
 )

@@ -127,8 +127,8 @@ obs_pred <- ggplot(plot_data, aes(x = .pred, y = truth)) +
     panel.grid.minor = element_blank()
   )
 
-ggsave("figures/testing_set_one.tiff", obs_pred, width = 8, height = 8)
-ggsave("figures/testing_set_one.png", obs_pred, width = 8, height = 8)
+ggsave("figures/model-performance/testing_set_one.tiff", obs_pred, width = 8, height = 8)
+ggsave("figures/model-performance/testing_set_one.png", obs_pred, width = 8, height = 8)
 
 
 # Performance training set 1 ----------------------------------------------
@@ -139,6 +139,7 @@ compute_metrics <- function(truth, pred) {
     R2    = yardstick::rsq_vec(truth = truth, estimate = pred),
     RMSE  = yardstick::rmse_vec(truth = truth, estimate = pred),
     MAE   = yardstick::mae_vec(truth = truth, estimate = pred),
+    MSE  = mean((pred - truth)^2, na.rm = TRUE),
     MSD   = mean(pred - truth, na.rm = TRUE),                       
     MAD   = mean(abs(pred - truth), na.rm = TRUE),                  
     MRSD  = mean((pred - truth) / truth, na.rm = TRUE))            
@@ -174,6 +175,7 @@ perf_ft <- perf_table %>%
     R2    = round(R2, 3),
     RMSE  = round(RMSE, 3),
     MAE   = round(MAE, 3),
+    MSE   = round(MSE, 3),
     MSD   = round(MSD, 3),
     MAD   = round(MAD, 3),
     MRSD  = round(MRSD, 3)) %>% 
@@ -185,5 +187,5 @@ perf_ft
 # Export to Word
 doc <- officer::read_docx() %>%
   body_add_flextable(perf_ft)
-print(doc, target = "docx/performance_set1.docx")
+print(doc, target = "docx/model-performance/performance_set1.docx")
 

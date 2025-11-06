@@ -128,4 +128,4 @@ doc_post_hoc <- read_docx() %>%
   body_add_flextable(ft_post_hoc) %>%
   body_add_par("")
 
-print(doc_post_hoc, target = "docx/post-hoc-table.docx")
+print(doc_post_hoc, target = "docx/post-hoc/post-hoc-table.docx")

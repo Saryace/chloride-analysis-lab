@@ -65,8 +65,8 @@ fig_corr <- ggpairs(
   scale_fill_manual(values = okabe_ito_dark) +   
   theme_bw()
 
-ggsave("figures/fig_corr.tiff", fig_corr, width = 8, height = 8)
-ggsave("figures/fig_corr.png", fig_corr, width = 8, height = 8)
+ggsave("figures/correlation/fig_corr.tiff", fig_corr, width = 8, height = 8)
+ggsave("figures/correlation/fig_corr.png", fig_corr, width = 8, height = 8)
 
 fig_corr_log <- ggpairs(
   cl_data %>%
@@ -81,5 +81,5 @@ fig_corr_log <- ggpairs(
   scale_fill_manual(values = okabe_ito_dark) +   
   theme_bw()
 
-ggsave("figures/fig_corr_log.tiff", fig_corr_log, width = 8, height = 8)
-ggsave("figures/fig_corr_log.png", fig_corr_log, width = 8, height = 8)
+ggsave("figures/correlation/fig_corr_log.tiff", fig_corr_log, width = 8, height = 8)
+ggsave("figures/correlation/fig_corr_log.png", fig_corr_log, width = 8, height = 8)
