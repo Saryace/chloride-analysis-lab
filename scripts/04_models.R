@@ -11,7 +11,6 @@ library(officer)
 
 certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
   filter(Set == 1) %>%
-  filter(if_all(everything(), ~ !grepl("[<>]", as.character(.)))) %>%
   mutate(
     across(c(MT, PT, ICP, IC, pH, EC), as.numeric),
     logMT  = log10(MT),
@@ -76,15 +75,19 @@ fit_lm_cv <- function(response, predictor, intercept = TRUE) {
     tibble(
       RMSE = sqrt(mean((truth - preds)^2, na.rm = TRUE)),
       MAE  = mean(abs(truth - preds), na.rm = TRUE),
-      MSE  = mean((truth - preds)^2, na.rm = TRUE)
+      MSE  = mean((truth - preds)^2, na.rm = TRUE),
+      MSD  = mean(truth - preds, na.rm = TRUE),        # bias (signed)
+      MAD  = median(abs(truth - preds), na.rm = TRUE)  # robust
     )
     
   }) %>%
     summarise(
-      RMSE = mean(RMSE),
-      MAE  = mean(MAE),
-      MSE  = mean(MSE)
-    ) %>%
+      RMSE = mean(RMSE, na.rm = TRUE),
+      MAE  = mean(MAE,  na.rm = TRUE),
+      MSE  = mean(MSE,  na.rm = TRUE),
+      MSD  = mean(MSD,  na.rm = TRUE),
+      MAD  = mean(MAD,  na.rm = TRUE)
+    ) %>% 
     mutate(
       response = response,
       predictor = predictor,
@@ -188,14 +191,14 @@ intercepts_original <- ggplot(
     method = "lm",
     formula = y ~ x,
     se = FALSE,
-    size = 0.8
+    linewidth = 0.8
   ) +
   geom_smooth(
     data = pred_results_original %>% filter(!intercept),
     method = "lm",
     formula = y ~ 0 + x,
     se = FALSE,
-    size = 0.8
+    linewidth = 0.8
   ) +
   facet_grid(response ~ predictor) +
   coord_obs_pred() +
@@ -240,14 +243,14 @@ intercepts_log <- ggplot(
     method = "lm",
     formula = y ~ x,
     se = FALSE,
-    size = 0.8
+    linewidth = 0.8
   ) +
   geom_smooth(
     data = pred_results_log %>% filter(!intercept),
     method = "lm",
     formula = y ~ 0 + x,
     se = FALSE,
-    size = 0.8
+    linewidth = 0.8
   ) +
   facet_grid(response ~ predictor) +
   coord_obs_pred() +
@@ -337,7 +340,9 @@ table_export <- model_results %>%
     `Std.Error` = std.error,
     RMSE,
     MAE,
-    MSE
+    MSE,
+    MSD,  
+    MAD 
   ) %>%
   arrange(Scale, Response, Predictor, RMSE)
 
@@ -367,7 +372,9 @@ best_table_export <- best_models %>%
     `Std.Error` = std.error,
     RMSE,
     MAE,
-    MSE
+    MSE,
+    MSD,  
+    MAD 
   ) %>%
   arrange(Scale, Response, RMSE)
 
@@ -412,10 +419,6 @@ ft_log <- flextable(table_export_log) %>%
   align(j = "Response", align = "center", part = "body")
 
 doc_all <- read_docx() %>%
-  body_add_par(
-    "Regression model labels: 'With intercept' indicates a standard linear model (y = a + bx), whereas 'Forced through origin' indicates a model constrained to pass through zero (y = bx).",
-    style = "Normal"
-  ) %>%
   body_add_par("", style = "Normal") %>%
   flextable::body_add_flextable(value = ft_original) %>%
   body_add_par("", style = "Normal") %>%
@@ -444,10 +447,6 @@ ft_best_log <- flextable(best_table_export_log) %>%
   align(j = "Response", align = "center", part = "body")
 
 doc_best <- read_docx() %>%
-  body_add_par(
-    "For each response–predictor pair, the dplyr::selected model corresponds to the regression form (with intercept or forced through origin) with the lowest 10-fold cross-validated RMSE.",
-    style = "Normal"
-  ) %>%
   body_add_par("", style = "Normal") %>%
   flextable::body_add_flextable(value = ft_best_original) %>%
   body_add_par("", style = "Normal") %>%

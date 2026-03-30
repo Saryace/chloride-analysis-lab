@@ -14,7 +14,6 @@ library(officer) # for exporting .docx
 
 certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
   filter(Set == 1) %>%
-  filter(if_all(everything(), ~ !grepl("[<>]", as.character(.)))) %>%
   mutate(
     across(c(MT, PT, ICP, IC, pH, EC), as.numeric),
     logMT  = log10(MT),
@@ -26,7 +25,6 @@ certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
 
 non_certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
   filter(Set != 1) %>%
-  filter(if_all(everything(), ~ !grepl("[<>]", as.character(.)))) %>%
   mutate(
     across(c(MT, PT, ICP, IC, pH, EC), as.numeric),
     logMT  = log10(MT),
@@ -37,7 +35,6 @@ non_certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
   )
 
 spill_data <- read_excel("data/Chap2-Rcode-DataBase-S5-NDSUContaminateSoil.xlsx") %>%
-  filter(if_all(everything(), ~ !grepl("[<>]", as.character(.)))) %>%
   mutate(
     across(c(MT, PT, ICP, IC, pH, EC), as.numeric),
     logMT  = log10(MT),

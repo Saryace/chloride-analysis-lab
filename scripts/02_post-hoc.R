@@ -15,7 +15,6 @@ library(FSA) # dunn'test
 # Load data ---------------------------------------------------------------
 certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
   filter(Set == 1) %>%
-  filter(if_all(everything(), ~ !grepl("[<>]", as.character(.)))) %>%
   mutate(
     across(c(MT, PT, ICP, IC, pH, EC), as.numeric),
     logMT  = log10(MT),
@@ -55,6 +54,9 @@ cl_certified_log <- certified_data %>%
 
 # Friedman test -----------------------------------------------------------
 # Repeated measures non-parametric comparison among methods
+# Citation: 10.1016/j.geoderma.2026.117774 
+# Comparisons of Cl methods were performed using the non-parametric Friedman test
+# to account for the effect of pairing (each soil sample was measured using the four methods)
 
 friedman_original <- friedman.test(as.matrix(cl_certified %>% dplyr::select(-ID)))
 friedman_log <- friedman.test(as.matrix(cl_certified_log %>% dplyr::select(-ID)))

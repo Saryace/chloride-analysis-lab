@@ -11,7 +11,6 @@ library(officer)
 
 non_certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
   filter(Set != 1) %>%
-  filter(if_all(everything(), ~ !grepl("[<>]", as.character(.)))) %>%
   mutate(
     across(c(MT, PT, ICP, IC, pH, EC), as.numeric),
     logMT  = log10(MT),
@@ -22,7 +21,6 @@ non_certified_data <- read_excel("data/Chap2-Rcode-DataBase.xlsx") %>%
   )
 
 spill_data <- read_excel("data/Chap2-Rcode-DataBase-S5-NDSUContaminateSoil.xlsx") %>%
-  filter(if_all(everything(), ~ !grepl("[<>]", as.character(.)))) %>%
   mutate(
     across(c(MT, PT, ICP, IC, pH, EC), as.numeric),
     logMT  = log10(MT),
@@ -59,8 +57,7 @@ fit_external_validation <- function(response, predictor, intercept, scale, new_d
     MAE  = mean(abs(error), na.rm = TRUE),
     MSE  = mean(error^2, na.rm = TRUE),
     MSD  = mean(error, na.rm = TRUE),
-    MAD  = mean(abs(error), na.rm = TRUE),
-    RMSD = sqrt(mean(error^2, na.rm = TRUE))
+    MAD  = mean(abs(error), na.rm = TRUE)
   )
 }
 
@@ -292,10 +289,6 @@ ft_non_certified_log <- flextable(external_non_certified_log) %>%
   set_caption("External validation of selected models using non-certified samples (Log scale)")
 
 doc_non_certified <- read_docx() %>%
-  body_add_par(
-    "Selected models were trained on certified samples and externally evaluated on non-certified samples.",
-    style = "Normal"
-  ) %>%
   body_add_par("", style = "Normal") %>%
   flextable::body_add_flextable(value = ft_non_certified_original) %>%
   body_add_par("", style = "Normal") %>%
@@ -316,10 +309,6 @@ ft_spill_log <- flextable(external_spill_log) %>%
   set_caption("External validation of selected models using spill samples (Log scale)")
 
 doc_spill <- read_docx() %>%
-  body_add_par(
-    "Selected models were trained on certified samples and externally evaluated on spill samples.",
-    style = "Normal"
-  ) %>%
   body_add_par("", style = "Normal") %>%
   flextable::body_add_flextable(value = ft_spill_original) %>%
   body_add_par("", style = "Normal") %>%
