@@ -97,6 +97,7 @@ KEY FINDINGS
 
 ---
 
+<<<<<<< HEAD
 ## Scripts
 
 ### `01_descriptive.R`
@@ -138,11 +139,72 @@ Develops pairwise linear calibration models among chloride analytical methods us
 **Outputs:**
 - `figures/model-training/fig_model_original.png / .tiff`
 - `figures/model-training/fig_model_log.png / .tiff`
+=======
+## Script Description
+
+### 01_descriptive.R
+
+Loads chloride datasets from certified, non-certified, and spill soil samples. Removes censored
+rows (`<` or `>`), converts analytical variables (`MT`, `PT`, `ICP`, `IC`, `pH`, `EC`) to numeric,
+and computes log10 transforms. Descriptive statistics (N, mean, SD, variance, SE, CV, min-max,
+median, quartiles, skewness) are calculated by sample group for both original and log-transformed
+variables and exported as formatted Word tables.
+
+> Note: variance in spill samples reaches the millions due to the concentration range (300-10,000 mg/kg).
+
+**Outputs**
+- `docx/stat-original.docx`
+- `docx/stat-log.docx`
+
+---
+
+### 02_post-hoc.R
+
+Loads certified soil samples only. Normality is assessed with Shapiro-Wilk tests. Differences
+among methods (MT, PT, ICP, IC) are tested with the Friedman test, followed by paired Wilcoxon
+post-hoc comparisons with Bonferroni correction.
+
+> ICP and IC are statistically equivalent (original and log scale). PT differs significantly from all other methods.
+
+**Outputs**
+- `docx/post-hoc-table.docx`
+
+---
+
+### 03_correlation.R
+
+Produces pairwise correlation matrix figures (`ggpairs`) for MT, PT, ICP, and IC across the three
+datasets (certified, non-certified, spill), in both original and log10 scale. Diagonal panels show
+distributions; lower panels show scatterplots; upper panels show correlation coefficients.
+
+**Outputs**
+- `figures/correlation/fig_corr.png` / `.tiff`
+- `figures/correlation/fig_corr_log.png` / `.tiff`
+- `figures/correlation/fig_corr_non_certified.png` / `.tiff`
+- `figures/correlation/fig_corr_non_certified_log.png` / `.tiff`
+- `figures/correlation/fig_corr_spill.png` / `.tiff`
+- `figures/correlation/fig_corr_spill_log.png` / `.tiff`
+
+---
+
+### 04_models.R
+
+Develops pairwise linear calibration models among MT, PT, ICP, and IC using certified samples,
+on both original and log10 scales. Models are fitted with and without intercept and evaluated
+using 10-fold cross-validation. The best model per pair is selected by RMSE.
+
+> IC, ICP, and MT show slopes close to 1 and low RMSE. PT shows lower slopes and higher error, indicating systematic differences.
+
+**Outputs**
+- `figures/model-training/fig_model_original.png` / `.tiff`
+- `figures/model-training/fig_model_log.png` / `.tiff`
+>>>>>>> d429e372deb29bf6483457d1e0297a8d3d8eb4c4
 - `docx/model-training/models-table-intercept-all.docx`
 - `docx/model-training/models-table-best-per-pair.docx`
 
 ---
 
+<<<<<<< HEAD
 ### `05_external_validation.R`
 
 Applies the best regression models (calibrated on certified samples) to non-certified and spill datasets. Computes prediction metrics (RMSE, MAE, MSE, MSD, MAD, RMSD) and generates observed-vs-predicted plots.
@@ -158,6 +220,23 @@ Applies the best regression models (calibrated on certified samples) to non-cert
 - `docx/external-validation/spill-external-validation.docx`
 
 ---
+=======
+### 05_external_validation.R
+
+Applies the best models from `04_models.R` to non-certified and spill datasets. Computes
+prediction metrics (RMSE, MAE, MSE, MSD, MAD, RMSD) and generates observed vs. predicted plots
+and summary tables.
+
+> Log scale predictions closely follow the 1:1 line with minimal bias. Original scale shows more dispersion at high concentrations.
+
+**Outputs**
+- `figures/external-validation/fig_non_certified_original.png` / `.tiff`
+- `figures/external-validation/fig_non_certified_log.png` / `.tiff`
+- `figures/external-validation/fig_spill_original.png` / `.tiff`
+- `figures/external-validation/fig_spill_log.png` / `.tiff`
+- `docx/external-validation/non-certified-external-validation.docx`
+- `docx/external-validation/spill-external-validation.docx`
+>>>>>>> d429e372deb29bf6483457d1e0297a8d3d8eb4c4
 
 ## Figures
 
