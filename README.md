@@ -175,6 +175,7 @@ and summary tables.
 - `figures/external-validation/fig_spill_log.png` / `.tiff`
 - `docx/external-validation/non-certified-external-validation.docx`
 - `docx/external-validation/spill-external-validation.docx`
+- `docx/external-validation/per-set-external-validation.docx`
 
 ## Figures
 
