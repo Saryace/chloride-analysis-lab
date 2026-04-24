@@ -40,27 +40,28 @@ fit_external_validation <- function(response, predictor, intercept, scale, new_d
     as.formula(paste(response, "~ 0 +", predictor))
   }
   
-  mod <- lm(formula, data = cl_data)
-  
+  mod   <- lm(formula, data = cl_data)
   preds <- predict(mod, newdata = new_data)
   truth <- new_data[[response]]
   error <- preds - truth
   
   tibble(
-    Dataset = dataset_name,
-    Scale = ifelse(scale == "original", "Original scale", "Log scale"),
-    Response = response,
-    Predictor = predictor,
+    Dataset            = dataset_name,
+    Scale              = ifelse(scale == "original", "Original scale", "Log scale"),
+    Response           = response,
+    Predictor          = predictor,
     `Regression model` = ifelse(intercept, "With intercept", "Forced through origin"),
-    N = sum(!is.na(truth) & !is.na(preds)),
-    RMSE = sqrt(mean(error^2, na.rm = TRUE)),
-    MAE  = mean(abs(error), na.rm = TRUE),
-    MSE  = mean(error^2, na.rm = TRUE),
-    MSD  = mean(error, na.rm = TRUE),
-    MAD  = mean(abs(error), na.rm = TRUE)
+    intercept          = intercept,   # keep for join
+    scale_raw          = scale,       # keep for join
+    N    = sum(!is.na(truth) & !is.na(preds)),
+    RMSE = sqrt(mean(error^2,        na.rm = TRUE)),
+    MAE  = mean(abs(error),          na.rm = TRUE),
+    MSE  = mean(error^2,             na.rm = TRUE),
+    MSD  = mean(error,               na.rm = TRUE),
+    MAD  = mean(abs(error),          na.rm = TRUE),
+    MRSD = mean((error / truth) * 100, na.rm = TRUE)
   )
 }
-
 # External validation: non-certified -------------------------------------
 
 external_non_certified <- pmap_df(
@@ -93,10 +94,84 @@ external_spill <- pmap_df(
   }
 )
 
-# Combine results ---------------------------------------------------------
+# External validation: per Set -------------------------------------------
+sets_available <- sort(unique(non_certified_data$Set))
 
-external_results <- bind_rows(external_non_certified, external_spill) %>%
+external_per_set <- map_df(sets_available, function(s) {
+  set_data <- non_certified_data %>% filter(Set == s)
+  
+  pmap_df(
+    list(best_models$response, best_models$predictor, best_models$intercept, best_models$scale),
+    function(y, x, i, sc) {
+      fit_external_validation(
+        response     = y,
+        predictor    = x,
+        intercept    = i,
+        scale        = sc,
+        new_data     = set_data,
+        dataset_name = paste0("Set ", s)
+      )
+    }
+  )
+})
+
+# Join intercept coefficients and clean ----------------------------------
+external_per_set <- external_per_set %>%
+  left_join(
+    coef_wide %>%
+      dplyr::select(response, predictor, intercept, scale, Intercept, Intercept.SE),
+    by = c(
+      "Response"  = "response",
+      "Predictor" = "predictor",
+      "intercept" = "intercept",
+      "scale_raw" = "scale"
+    )
+  ) %>%
   mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  dplyr::select(
+    Set                  = Dataset,
+    Scale,
+    Response,
+    Predictor,
+    `Regression model`,
+    `Intercept value`    = Intercept,
+    `Intercept SE`       = Intercept.SE,
+    N, RMSE, MAE, MSE, MSD, MAD, MRSD
+  ) %>%
+  arrange(Set, Scale, Response, RMSE)
+
+# Split per-Set tables ---------------------------------------------------
+per_set_original <- external_per_set %>%
+  filter(Scale == "Original scale") %>%
+  dplyr::select(-Scale)
+
+per_set_log <- external_per_set %>%
+  filter(Scale == "Log scale") %>%
+  dplyr::select(-Scale)
+
+# Combine results ---------------------------------------------------------
+external_results <- bind_rows(external_non_certified, external_spill) %>%
+  left_join(
+    coef_wide %>%
+      dplyr::select(response, predictor, intercept, scale, Intercept, Intercept.SE),
+    by = c(
+      "Response"  = "response",
+      "Predictor" = "predictor",
+      "intercept" = "intercept",
+      "scale_raw" = "scale"
+    )
+  ) %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  dplyr::select(
+    Dataset,
+    Scale,
+    Response,
+    Predictor,
+    `Regression model`,
+    `Intercept value`    = Intercept,
+    `Intercept SE`       = Intercept.SE,
+    N, RMSE, MAE, MSE, MSD, MAD, MRSD
+  ) %>%
   arrange(Dataset, Scale, Response, RMSE)
 
 # Split tables ------------------------------------------------------------
@@ -315,3 +390,26 @@ doc_spill <- read_docx() %>%
   flextable::body_add_flextable(value = ft_spill_log)
 
 print(doc_spill, target = "docx/external-validation/spill-external-validation.docx")
+
+# DOCX export: per Set ---------------------------------------------------
+ft_per_set_original <- flextable(per_set_original) %>%
+  theme_booktabs() %>%
+  autofit() %>%
+  set_caption("External validation of selected models by Set (Original scale)") %>%
+  merge_v(j = "Set") %>%
+  align(j = "Set", align = "center", part = "body")
+
+ft_per_set_log <- flextable(per_set_log) %>%
+  theme_booktabs() %>%
+  autofit() %>%
+  set_caption("External validation of selected models by Set (Log scale)") %>%
+  merge_v(j = "Set") %>%
+  align(j = "Set", align = "center", part = "body")
+
+doc_per_set <- read_docx() %>%
+  body_add_par("", style = "Normal") %>%
+  flextable::body_add_flextable(value = ft_per_set_original) %>%
+  body_add_par("", style = "Normal") %>%
+  flextable::body_add_flextable(value = ft_per_set_log)
+
+print(doc_per_set, target = "docx/external-validation/per-set-external-validation.docx")

@@ -281,6 +281,7 @@ ggsave(
 
 # Extract slopes for all models -------------------------------------------
 
+# Extract slopes AND intercepts for all models ----------------------------
 coef_results <- pmap_df(
   list(combinations$response, combinations$predictor, combinations$scale),
   function(y, x, s) {
@@ -290,91 +291,87 @@ coef_results <- pmap_df(
       broom::tidy(
         lm(as.formula(paste(y, "~", x)), data = cl_data)
       ) %>%
-        filter(term == x) %>%
         mutate(
-          response = y,
+          response  = y,
           predictor = x,
           intercept = TRUE,
-          scale = s
+          scale     = s
         ),
       
       broom::tidy(
         lm(as.formula(paste(y, "~ 0 +", x)), data = cl_data)
       ) %>%
-        filter(term == x) %>%
         mutate(
-          response = y,
+          response  = y,
           predictor = x,
           intercept = FALSE,
-          scale = s
+          scale     = s
         )
       
     )
-    
-  }
-)
+  })
 
+# Reshape: one row per model, with slope and intercept as separate columns
+coef_wide <- coef_results %>%
+  mutate(coef_name = case_when(
+    term == "(Intercept)" ~ "intercept_value",
+    term == predictor     ~ "slope_value",
+    TRUE                  ~ NA_character_
+  )) %>%
+  filter(!is.na(coef_name)) %>%
+  dplyr::select(response, predictor, intercept, scale, coef_name, estimate, std.error) %>%
+  pivot_wider(
+    names_from  = coef_name,
+    values_from = c(estimate, std.error),
+    names_glue  = "{coef_name}_{.value}"
+  ) %>%
+  rename(
+    Slope         = slope_value_estimate,
+    Slope.SE      = slope_value_std.error,
+    Intercept     = intercept_value_estimate,
+    Intercept.SE  = intercept_value_std.error
+  )
 # Merge coefficients + CV metrics ----------------------------------------
 
 table_export <- model_results %>%
-  left_join(
-    coef_results %>%
-      dplyr::select(response, predictor, intercept, scale, estimate, std.error),
-    by = c("response", "predictor", "intercept", "scale")
-  ) %>%
+  left_join(coef_wide, by = c("response", "predictor", "intercept", "scale")) %>%
   mutate(
-    `Regression model` = ifelse(
-      intercept,
-      "With intercept",
-      "Forced through origin"
-    ),
+    `Regression model` = ifelse(intercept, "With intercept", "Forced through origin"),
     Scale = ifelse(scale == "original", "Original scale", "Log scale"),
     across(where(is.numeric), ~ round(., 3))
   ) %>%
   dplyr::select(
     Scale,
-    Response = response,
-    Predictor = predictor,
+    Response    = response,
+    Predictor   = predictor,
     `Regression model`,
-    `Slope` = estimate,
-    `Std.Error` = std.error,
-    RMSE,
-    MAE,
-    MSE,
-    MSD,  
-    MAD 
+    Slope,
+    `Slope SE`  = Slope.SE,
+    Intercept,
+    `Intercept SE` = Intercept.SE,
+    RMSE, MAE, MSE, MSD, MAD
   ) %>%
   arrange(Scale, Response, Predictor, RMSE)
 
 # Best-model table --------------------------------------------------------
 
 best_table_export <- best_models %>%
-  left_join(
-    coef_results %>%
-      dplyr::select(response, predictor, intercept, scale, estimate, std.error),
-    by = c("response", "predictor", "intercept", "scale")
-  ) %>%
+  left_join(coef_wide, by = c("response", "predictor", "intercept", "scale")) %>%
   mutate(
-    `Regression model` = ifelse(
-      intercept,
-      "With intercept",
-      "Forced through origin"
-    ),
+    `Regression model` = ifelse(intercept, "With intercept", "Forced through origin"),
     Scale = ifelse(scale == "original", "Original scale", "Log scale"),
     across(where(is.numeric), ~ round(., 3))
   ) %>%
   dplyr::select(
     Scale,
-    Response = response,
-    Predictor = predictor,
+    Response    = response,
+    Predictor   = predictor,
     `Regression model`,
-    `Slope` = estimate,
-    `Std.Error` = std.error,
-    RMSE,
-    MAE,
-    MSE,
-    MSD,  
-    MAD 
+    Slope,
+    `Slope SE`  = Slope.SE,
+    Intercept,
+    `Intercept SE` = Intercept.SE,
+    RMSE, MAE, MSE, MSD, MAD
   ) %>%
   arrange(Scale, Response, RMSE)
 
