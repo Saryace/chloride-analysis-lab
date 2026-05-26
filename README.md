@@ -1,4 +1,4 @@
-> **Last updated:** 03/30/2026
+> **Last updated:** 05/25/2026
 
 # Soil Chloride Measurement Methods — Evaluation Repository
 
@@ -79,7 +79,7 @@ Best models from 04_models.R
         |
         v
 05_external_validation.R
-Metrics: RMSE, MAE, MSE, MSD, MAD, RMSD
+Metrics: RMSE, MAE, MSE, MSD, MAD, RMSD, R2 and R
 Observed vs. predicted plots
         |
         v

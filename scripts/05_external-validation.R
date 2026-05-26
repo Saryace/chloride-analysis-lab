@@ -51,15 +51,17 @@ fit_external_validation <- function(response, predictor, intercept, scale, new_d
     Response           = response,
     Predictor          = predictor,
     `Regression model` = ifelse(intercept, "With intercept", "Forced through origin"),
-    intercept          = intercept,   # keep for join
-    scale_raw          = scale,       # keep for join
+    intercept          = intercept,
+    scale_raw          = scale,
     N    = sum(!is.na(truth) & !is.na(preds)),
     RMSE = sqrt(mean(error^2,        na.rm = TRUE)),
     MAE  = mean(abs(error),          na.rm = TRUE),
     MSE  = mean(error^2,             na.rm = TRUE),
     MSD  = mean(error,               na.rm = TRUE),
     MAD  = mean(abs(error),          na.rm = TRUE),
-    MRSD = mean((error / truth) * 100, na.rm = TRUE)
+    MRSD = mean((error / truth) * 100, na.rm = TRUE),
+    R2   = cor(truth, preds, use = "complete.obs")^2,
+    R    = cor(truth, preds, use = "complete.obs")
   )
 }
 # External validation: non-certified -------------------------------------
@@ -136,7 +138,7 @@ external_per_set <- external_per_set %>%
     `Regression model`,
     `Intercept value`    = Intercept,
     `Intercept SE`       = Intercept.SE,
-    N, RMSE, MAE, MSE, MSD, MAD, MRSD
+    N, RMSE, MAE, MSE, MSD, MAD, MRSD, R2, R
   ) %>%
   arrange(Set, Scale, Response, RMSE)
 
@@ -170,7 +172,7 @@ external_results <- bind_rows(external_non_certified, external_spill) %>%
     `Regression model`,
     `Intercept value`    = Intercept,
     `Intercept SE`       = Intercept.SE,
-    N, RMSE, MAE, MSE, MSD, MAD, MRSD
+    N, RMSE, MAE, MSE, MSD, MAD, MRSD, R2, R
   ) %>%
   arrange(Dataset, Scale, Response, RMSE)
 

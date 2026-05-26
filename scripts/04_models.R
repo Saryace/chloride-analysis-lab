@@ -76,8 +76,10 @@ fit_lm_cv <- function(response, predictor, intercept = TRUE) {
       RMSE = sqrt(mean((truth - preds)^2, na.rm = TRUE)),
       MAE  = mean(abs(truth - preds), na.rm = TRUE),
       MSE  = mean((truth - preds)^2, na.rm = TRUE),
-      MSD  = mean(truth - preds, na.rm = TRUE),        # bias (signed)
-      MAD  = median(abs(truth - preds), na.rm = TRUE)  # robust
+      MSD  = mean(truth - preds, na.rm = TRUE),
+      MAD  = median(abs(truth - preds), na.rm = TRUE),
+      R2   = cor(truth, preds, use = "complete.obs")^2,
+      R    = cor(truth, preds, use = "complete.obs")
     )
     
   }) %>%
@@ -86,7 +88,9 @@ fit_lm_cv <- function(response, predictor, intercept = TRUE) {
       MAE  = mean(MAE,  na.rm = TRUE),
       MSE  = mean(MSE,  na.rm = TRUE),
       MSD  = mean(MSD,  na.rm = TRUE),
-      MAD  = mean(MAD,  na.rm = TRUE)
+      MAD  = mean(MAD,  na.rm = TRUE),
+      R2   = mean(R2,   na.rm = TRUE),
+      R    = mean(R,    na.rm = TRUE)
     ) %>% 
     mutate(
       response = response,
@@ -349,7 +353,7 @@ table_export <- model_results %>%
     `Slope SE`  = Slope.SE,
     Intercept,
     `Intercept SE` = Intercept.SE,
-    RMSE, MAE, MSE, MSD, MAD
+    RMSE, MAE, MSE, MSD, MAD, R2, R
   ) %>%
   arrange(Scale, Response, Predictor, RMSE)
 
@@ -371,7 +375,7 @@ best_table_export <- best_models %>%
     `Slope SE`  = Slope.SE,
     Intercept,
     `Intercept SE` = Intercept.SE,
-    RMSE, MAE, MSE, MSD, MAD
+    RMSE, MAE, MSE, MSD, MAD, R2, R
   ) %>%
   arrange(Scale, Response, RMSE)
 
