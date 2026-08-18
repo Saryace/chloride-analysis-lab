@@ -285,6 +285,18 @@ ggsave(
 
 # Extract slopes for all models -------------------------------------------
 
+# Significance ------------------------------------------------------------
+
+sig_code <- function(p) {
+  case_when(
+    is.na(p)      ~ NA_character_,
+    p < 0.001     ~ "***",
+    p < 0.01      ~ "**",
+    p < 0.05      ~ "*",
+    TRUE          ~ "NS"
+  )
+}
+
 # Extract slopes AND intercepts for all models ----------------------------
 coef_results <- pmap_df(
   list(combinations$response, combinations$predictor, combinations$scale),
@@ -316,6 +328,7 @@ coef_results <- pmap_df(
   })
 
 # Reshape: one row per model, with slope and intercept as separate columns
+
 coef_wide <- coef_results %>%
   mutate(coef_name = case_when(
     term == "(Intercept)" ~ "intercept_value",
@@ -323,18 +336,25 @@ coef_wide <- coef_results %>%
     TRUE                  ~ NA_character_
   )) %>%
   filter(!is.na(coef_name)) %>%
-  dplyr::select(response, predictor, intercept, scale, coef_name, estimate, std.error) %>%
+  dplyr::select(response, predictor, intercept, scale, coef_name, estimate, std.error, p.value) %>%
   pivot_wider(
     names_from  = coef_name,
-    values_from = c(estimate, std.error),
+    values_from = c(estimate, std.error, p.value),
     names_glue  = "{coef_name}_{.value}"
   ) %>%
   rename(
     Slope         = slope_value_estimate,
     Slope.SE      = slope_value_std.error,
+    Slope.P       = slope_value_p.value,
     Intercept     = intercept_value_estimate,
-    Intercept.SE  = intercept_value_std.error
+    Intercept.SE  = intercept_value_std.error,
+    Intercept.P   = intercept_value_p.value
+  ) %>%
+  mutate(
+    Slope.Sig     = sig_code(Slope.P),
+    Intercept.Sig = sig_code(Intercept.P)
   )
+
 # Merge coefficients + CV metrics ----------------------------------------
 
 table_export <- model_results %>%
@@ -351,8 +371,10 @@ table_export <- model_results %>%
     `Regression model`,
     Slope,
     `Slope SE`  = Slope.SE,
+    `Slope Sig` = Slope.Sig,
     Intercept,
-    `Intercept SE` = Intercept.SE,
+    `Intercept SE`  = Intercept.SE,
+    `Intercept Sig` = Intercept.Sig,
     RMSE, MAE, MSE, MSD, MAD, R2, R
   ) %>%
   arrange(Scale, Response, Predictor, RMSE)
@@ -373,8 +395,10 @@ best_table_export <- best_models %>%
     `Regression model`,
     Slope,
     `Slope SE`  = Slope.SE,
+    `Slope Sig` = Slope.Sig,
     Intercept,
-    `Intercept SE` = Intercept.SE,
+    `Intercept SE`  = Intercept.SE,
+    `Intercept Sig` = Intercept.Sig,
     RMSE, MAE, MSE, MSD, MAD, R2, R
   ) %>%
   arrange(Scale, Response, RMSE)
