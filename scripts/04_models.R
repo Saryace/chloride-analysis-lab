@@ -478,3 +478,55 @@ doc_best <- read_docx() %>%
   flextable::body_add_flextable(value = ft_best_log)
 
 print(doc_best, target = "docx/model-training/models-table-best-per-pair.docx")
+
+# Labeling test/train -----------------------------------------------------
+
+fold_split_table <- folds %>%
+  mutate(
+    test_ids = map_chr(splits, function(split) {
+      test_data <- rsample::testing(split)
+      paste(sort(test_data$ID), collapse = ", ")
+    }),
+    train_ids = map_chr(splits, function(split) {
+      train_data <- rsample::training(split)
+      paste(sort(train_data$ID), collapse = ", ")
+    }),
+    n_train = map_int(splits, ~ nrow(rsample::training(.x))),
+    n_test  = map_int(splits, ~ nrow(rsample::testing(.x)))
+  ) %>%
+  dplyr::select(
+    Fold        = id,
+    `N (train)` = n_train,
+    `N (test)`  = n_test,
+    `Test sample numbers`  = test_ids,
+    `Train sample numbers` = train_ids
+  )
+
+# Print in the requested inline format: "Fold 01: test 23,24,25,12,22" -------
+
+fold_split_table %>%
+  mutate(label = paste0(
+    gsub("Fold", "Fold ", Fold), ": test ", `Test sample numbers (ID)`
+  )) %>%
+  pull(label) %>%
+  walk(print)
+
+# Build flextable in the style of Table 2 ------------------------------------
+
+ft_fold_split <- flextable(
+  fold_split_table %>% dplyr::select(Fold, `N (train)`, `N (test)`, `Test sample numbers`)
+) %>%
+  theme_booktabs() %>%
+  autofit() %>%
+  align(j = "Fold", align = "center", part = "body") %>%
+  bg(i = seq(2, 10, by = 2), bg = "#E7E6E6", part = "body") %>%
+  italic(part = "footer") %>%
+  fontsize(size = 9, part = "footer")
+
+# Export DOCX -----------------------------------------------------------------
+
+doc_fold_split <- read_docx() %>%
+  body_add_par("", style = "Normal") %>%
+  flextable::body_add_flextable(value = ft_fold_split)
+
+print(doc_fold_split, target = "docx/model-training/fold-split-table.docx")
